@@ -24,7 +24,7 @@
 
 - [Part 1 — Basic Setup](#-part-1--basic-setup)
 - [Part 2 — SSL & HTTPS](#-part-2--ssl--https)
-- [Part 3 — Nginx Config Hardening](#-part-3--nginx-config-hardening)
+- [Part 3 — Nginx Configuration](#-part-3--nginx-configuration)
 - [Part 4 — Reverse Proxy](#-part-4--reverse-proxy)
 - [Part 5 — Testing & Validation](#-part-5--testing--validation)
 
@@ -170,9 +170,105 @@ ls -la /etc/nginx/ssl/
 
 ---
 
-## 🛡️ Part 3 — Nginx Config Hardening
+## ✅ Part 3 — Nginx Configuration
 
-> 🚧 *Coming soon — Security headers, rate limiting, and gzip compression.*
+### 1. Create Config File
+
+```bash
+sudo nano /etc/nginx/sites-available/secure-app
+```
+
+### 2. Nginx Config (Full)
+
+<details>
+<summary>📄 <code>/etc/nginx/sites-available/secure-app</code></summary>
+
+<br/>
+
+```nginx
+# ── HTTP → HTTPS Redirect (Port 80) ──────────────────────────
+server {
+    listen 80;
+    listen [::]:80;
+    server_name 13.126.211.216;
+
+    return 301 https://$host$request_uri;
+}
+
+# ── HTTPS Server (Port 443) ───────────────────────────────────
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name 13.126.211.216;
+
+    # SSL Certificate
+    ssl_certificate     /etc/nginx/ssl/self-signed.crt;
+    ssl_certificate_key /etc/nginx/ssl/self-signed.key;
+
+    # SSL Hardening
+    ssl_protocols             TLSv1.2 TLSv1.3;
+    ssl_ciphers               HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Static site root
+    root  /var/www/secure-app;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Reverse Proxy → Backend on port 3000
+    location /api/ {
+        proxy_pass         http://127.0.0.1:3000/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    # Security Headers
+    add_header X-Frame-Options        "SAMEORIGIN"  always;
+    add_header X-Content-Type-Options "nosniff"     always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    access_log /var/log/nginx/secure-app.access.log;
+    error_log  /var/log/nginx/secure-app.error.log;
+}
+```
+
+</details>
+
+<br/>
+
+#### ⚙️ Config Highlights
+
+| Feature | Details |
+|---|---|
+| HTTP → HTTPS | `return 301` redirects all port 80 traffic |
+| SSL Protocols | TLSv1.2 & TLSv1.3 only |
+| Ciphers | `HIGH:!aNULL:!MD5` — strong ciphers only |
+| Reverse Proxy | `/api/` → `127.0.0.1:3000` |
+| `X-Frame-Options` | Prevents clickjacking (`SAMEORIGIN`) |
+| `X-Content-Type-Options` | Prevents MIME-type sniffing (`nosniff`) |
+| `HSTS` | Forces HTTPS for 1 year (`max-age=31536000`) |
+
+### 3. Enable Site & Disable Default
+
+```bash
+sudo ln -sf /etc/nginx/sites-available/secure-app \
+             /etc/nginx/sites-enabled/secure-app
+
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+### 4. Test & Reload
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
 ---
 
