@@ -359,9 +359,101 @@ curl http://127.0.0.1:3000
 
 ---
 
-## 🧪 Part 5 — Testing & Validation
+## ✅ Part 5 — Testing & Validation
 
-> 🚧 *Coming soon — curl tests, SSL Labs score, and load testing.*
+### Test 1 · Nginx Config Syntax Check
+
+```bash
+sudo nginx -t
+```
+
+**Expected:**
+
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+---
+
+### Test 2 · Reload Nginx
+
+```bash
+sudo systemctl reload nginx
+sudo systemctl status nginx
+```
+
+---
+
+### Test 3 · HTTP → HTTPS Redirect
+
+```bash
+curl -I http://13.126.211.216
+```
+
+**Expected:**
+
+```
+HTTP/1.1 301 Moved Permanently
+Location: https://13.126.211.216/
+```
+
+---
+
+### Test 4 · HTTPS Working (Self-Signed)
+
+```bash
+curl -k -I https://13.126.211.216
+```
+
+**Expected:**
+
+```
+HTTP/2 200
+server: nginx
+content-type: text/html
+```
+
+---
+
+### Test 5 · Backend via Nginx Reverse Proxy
+
+```bash
+curl -k https://13.126.211.216/api/
+```
+
+**Expected:**
+
+```json
+{
+  "status": "ok",
+  "message": "Backend running on port 3000",
+  "proxied_by": "Nginx",
+  "timestamp": "2025-04-21T10:00:00.000Z"
+}
+```
+
+---
+
+#### 📊 Test Summary
+
+| # | Test | Command | Expected Status |
+|---|---|---|---|
+| 1 | Config syntax | `nginx -t` | ✅ `syntax is ok` |
+| 2 | Service reload | `systemctl reload nginx` | ✅ `active (running)` |
+| 3 | HTTP → HTTPS | `curl -I http://...` | ✅ `301 Moved Permanently` |
+| 4 | HTTPS response | `curl -k -I https://...` | ✅ `HTTP/2 200` |
+| 5 | Reverse proxy | `curl -k https://.../api/` | ✅ `JSON response` |
+
+<div align="center">
+
+#### 📸 Terminal Output
+
+<img src="assets/testing-terminal.png" alt="Terminal showing all tests passing" width="700"/>
+
+<sub>All tests passing — Nginx config valid, HTTPS active, reverse proxy working</sub>
+
+</div>
 
 ---
 
@@ -371,10 +463,10 @@ curl http://127.0.0.1:3000
 
 ```
  ✅ Basic Setup
- ─────────────▶ 🔐 SSL
-                 ─────────────▶ 🛡️ Hardening
-                                 ─────────────▶ 🔄 Reverse Proxy
-                                                 ─────────────▶ 🧪 Testing
+ ─────────────▶ ✅ SSL
+                 ─────────────▶ ✅ Nginx Config
+                                 ─────────────▶ ✅ Reverse Proxy
+                                                 ─────────────▶ ✅ Testing
 ```
 
 <br/>
