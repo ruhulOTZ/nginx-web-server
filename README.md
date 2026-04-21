@@ -272,9 +272,90 @@ sudo systemctl reload nginx
 
 ---
 
-## 🔄 Part 4 — Reverse Proxy
+## ✅ Part 4 — Reverse Proxy
 
-> 🚧 *Coming soon — Proxying requests to a backend application server.*
+> Backend on Port 3000 · Proxied via Nginx `/api/`
+
+### 1. Create Node.js Backend
+
+```bash
+sudo nano /var/www/secure-app/server.js
+```
+
+<details>
+<summary>📄 <code>/var/www/secure-app/server.js</code></summary>
+
+<br/>
+
+```javascript
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.writeHead(200);
+  res.end(JSON.stringify({
+    status:    'ok',
+    message:   'Backend running on port 3000',
+    proxied_by: 'Nginx',
+    timestamp: new Date().toISOString()
+  }, null, 2));
+});
+
+server.listen(3000, '127.0.0.1', () => {
+  console.log('Backend running at http://127.0.0.1:3000');
+});
+```
+
+</details>
+
+<br/>
+
+### 2. Install PM2 & Run Backend
+
+```bash
+sudo npm install -g pm2
+pm2 start /var/www/secure-app/server.js --name "secure-app-backend"
+pm2 save
+pm2 startup
+```
+
+#### 🔧 PM2 Quick Reference
+
+| Command | Purpose |
+|---|---|
+| `pm2 list` | Show all running processes |
+| `pm2 logs secure-app-backend` | View backend logs |
+| `pm2 restart secure-app-backend` | Restart the backend |
+| `pm2 stop secure-app-backend` | Stop the backend |
+| `pm2 save` | Persist process list across reboots |
+| `pm2 startup` | Generate system startup script |
+
+### 3. Verify Backend is Listening
+
+```bash
+curl http://127.0.0.1:3000
+```
+
+**Expected response:**
+
+```json
+{
+  "status": "ok",
+  "message": "Backend running on port 3000",
+  "proxied_by": "Nginx",
+  "timestamp": "2025-04-21T18:00:00.000Z"
+}
+```
+
+<div align="center">
+
+#### 📸 Live Preview
+
+<img src="assets/reverse-proxy-preview.png" alt="Reverse proxy API response via HTTPS" width="700"/>
+
+<sub>API response at <code>https://13.126.211.216/api/</code> — proxied through Nginx to port 3000</sub>
+
+</div>
 
 ---
 
