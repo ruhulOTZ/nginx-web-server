@@ -56,6 +56,18 @@ Cloned portfolio into `/var/www/secure-app`:
 sudo chown -R ubuntu:www-data /var/www/secure-app/portfolio.html
 ```
 
+<div align="center">
+
+#### 📸 Live Preview
+
+<img src="assets/portfolio-preview.png" alt="Portfolio site served by Nginx" width="700"/>
+
+<sub>Portfolio site served over HTTP at <code>13.126.211.216</code></sub>
+
+</div>
+
+<br/>
+
 ### 4. Configure Nginx
 
 ```bash
