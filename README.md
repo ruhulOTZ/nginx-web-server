@@ -56,17 +56,6 @@ Cloned portfolio into `/var/www/secure-app`:
 sudo chown -R ubuntu:www-data /var/www/secure-app/portfolio.html
 ```
 
-<div align="center">
-
-#### 📸 Live Preview
-
-<img src="assets/portfolio-preview.png" alt="Portfolio site served by Nginx" width="700"/>
-
-<sub>Portfolio site served over HTTP at <code>13.126.211.216</code></sub>
-
-</div>
-
-<br/>
 
 ### 4. Configure Nginx
 
@@ -123,11 +112,61 @@ server {
 | `Cache-Control: public` | Allows CDN / browser caching |
 | `deny all` on `/\.` | Blocks access to hidden files (`.env`, `.git`) |
 
+<div align="center">
+
+#### 📸 Live Preview
+
+<img src="assets/portfolio-preview.png" alt="Portfolio site served by Nginx" width="700"/>
+
+<sub>Portfolio site served over HTTP at <code>13.126.211.216</code></sub>
+
+</div>
+
 ---
 
-## 🔐 Part 2 — SSL & HTTPS
+## ✅ Part 2 — SSL & HTTPS
 
-> 🚧 *Coming soon — Certbot, Let's Encrypt, and HTTPS redirect configuration.*
+### 1. Create SSL Directory
+
+```bash
+sudo mkdir -p /etc/nginx/ssl
+```
+
+### 2. Generate Self-Signed Certificate
+
+> 365-day validity · RSA 4096-bit key
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
+  -keyout /etc/nginx/ssl/self-signed.key \
+  -out /etc/nginx/ssl/self-signed.crt \
+  -subj "/C=BD/ST=Dhaka/L=Dhaka/O=secure-app/CN=13.126.211.216"
+```
+
+### 3. Verify
+
+```bash
+ls -la /etc/nginx/ssl/
+```
+
+**Expected output:**
+
+```
+/etc/nginx/ssl/self-signed.crt
+/etc/nginx/ssl/self-signed.key
+```
+
+#### 🔑 Certificate Details
+
+| Field | Value |
+|---|---|
+| Type | Self-signed X.509 |
+| Key Size | RSA 4096-bit |
+| Validity | 365 days |
+| Country | BD |
+| State / City | Dhaka |
+| Organization | secure-app |
+| Common Name | `13.126.211.216` |
 
 ---
 
